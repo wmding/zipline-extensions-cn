@@ -28,7 +28,7 @@ from zipline.pipeline.loaders import USEquityPricingLoader
 import zipline.utils.paths as pth
 from zipline.extensions import load
 from zipline.errors import SymbolNotFound
-from zipline.algorithm import TradingAlgorithm
+from zipline_extensions_cn.algorithm import CNTradingAlgorithm
 from zipline.finance.blotter import Blotter
 
 log = logbook.Logger(__name__)
@@ -82,9 +82,9 @@ def _run(handle_data,
          environ,
          blotter,
          benchmark_spec):
-    """Run a backtest for the given algorithm.
+    """运行交易策略算法回测
 
-    This is shared between the cli and :func:`zipline.run_algo`.
+    会被 ``cli`` 和 :func:`zipline.run_algo` 调用.
     """
 
     bundle_data = bundles.load(
@@ -94,7 +94,7 @@ def _run(handle_data,
     )
 
     if trading_calendar is None:
-        trading_calendar = get_calendar('XNYS')
+        trading_calendar = get_calendar('XSHG')
 
     # date parameter validation
     if trading_calendar.session_distance(start, end) < 1:
@@ -191,7 +191,7 @@ def _run(handle_data,
         except ValueError as e:
             raise _RunAlgoError(str(e))
 
-    perf = TradingAlgorithm(
+    perf = CNTradingAlgorithm(
         namespace=namespace,
         data_portal=data,
         get_pipeline_loader=choose_loader,
@@ -229,12 +229,12 @@ def _run(handle_data,
 def run_algorithm(start,
                   end,
                   initialize,
-                  capital_base,
+                  capital_base=5e+6,
                   handle_data=None,
                   before_trading_start=None,
                   analyze=None,
                   data_frequency='daily',
-                  bundle='quantopian-quandl',
+                  bundle='mydb',
                   bundle_timestamp=None,
                   trading_calendar=None,
                   metrics_set='default',
@@ -245,44 +245,34 @@ def run_algorithm(start,
                   environ=os.environ,
                   blotter='default'):
     """
-    Run a trading algorithm.
+    运行交易策略算法.
 
     Parameters
     ----------
     start : datetime
-        The start date of the backtest.
+        回测的开始时间.
     end : datetime
-        The end date of the backtest..
+        回测的结束时间.
     initialize : callable[context -> None]
-        The initialize function to use for the algorithm. This is called once
-        at the very begining of the backtest and should be used to set up
-        any state needed by the algorithm.
+        策略算法的初始化函数, 每个回测开始前只运行一次, 用来设置策略算法的全局变量.
     capital_base : float
-        The starting capital for the backtest.
+        回测的初始资金.
     handle_data : callable[(context, BarData) -> None], optional
-        The handle_data function to use for the algorithm. This is called
-        every minute when ``data_frequency == 'minute'`` or every day
-        when ``data_frequency == 'daily'``.
+        策略算法处理行情/执行下单操作的函数, 按照设置的策略频率执行.
     before_trading_start : callable[(context, BarData) -> None], optional
-        The before_trading_start function for the algorithm. This is called
-        once before each trading day (after initialize on the first day).
+        每个交易日开盘前执行的函数(在第一天的初始化函数结束后执行)
     analyze : callable[(context, pd.DataFrame) -> None], optional
-        The analyze function to use for the algorithm. This function is called
-        once at the end of the backtest and is passed the context and the
-        performance data.
+        在回测结束以后执行的分析函数. 传入参数为 ``context`` 和回测结果数据.
     data_frequency : {'daily', 'minute'}, optional
-        The data frequency to run the algorithm at.
+        策略的执行频率.
     bundle : str, optional
-        The name of the data bundle to use to load the data to run the backtest
-        with. This defaults to 'quantopian-quandl'.
+        *zipline* 专用的数据格式组成的数据包.
     bundle_timestamp : datetime, optional
-        The datetime to lookup the bundle data for. This defaults to the
-        current time.
+        数据包的时间戳, 用来区分不同时间点的数据.
     trading_calendar : TradingCalendar, optional
-        The trading calendar to use for your backtest.
+        回测用的交易日历.
     metrics_set : iterable[Metric] or str, optional
-        The set of metrics to compute in the simulation. If a string is passed,
-        resolve the set with :func:`zipline.finance.metrics.load`.
+        记录的回测性能指标集, :func:`zipline.finance.metrics.load` 根据名称调用.
     default_extension : bool, optional
         Should the default zipline extension be loaded. This is found at
         ``$ZIPLINE_ROOT/extension.py``
@@ -297,20 +287,17 @@ def run_algorithm(start,
         The os environment to use. Many extensions use this to get parameters.
         This defaults to ``os.environ``.
     blotter : str or zipline.finance.blotter.Blotter, optional
-        Blotter to use with this algorithm. If passed as a string, we look for
-        a blotter construction function registered with
-        ``zipline.extensions.register`` and call it with no parameters.
-        Default is a :class:`zipline.finance.blotter.SimulationBlotter` that
-        never cancels orders.
+        交易信息记录类, 调用前需要用 ``zipline.extensions.register`` 先注册.
+        默认为 :class:`zipline.finance.blotter.SimulationBlotter`, 永远不会取消订单.
 
     Returns
     -------
     perf : pd.DataFrame
-        The daily performance of the algorithm.
+        交易策略的每日回测结果.
 
     See Also
     --------
-    zipline.data.bundles.bundles : The available data bundles.
+    zipline.data.bundles.bundles : 可用的数据包.
     """
     load_extensions(default_extension, extensions, strict_extensions, environ)
 

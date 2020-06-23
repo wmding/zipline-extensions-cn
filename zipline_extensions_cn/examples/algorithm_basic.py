@@ -51,7 +51,7 @@ def initialize(context):
 
 def my_func(context, data):
     # Order 100 shares of AAPL.
-    order_target(context.asset, 100)
+    order_target(context.asset, 1000)
 
     # Retrieve all open orders.
     open_orders = get_open_orders()
@@ -78,47 +78,27 @@ def analyze(context=None, results=None):
     # Plot the portfolio and asset data.
     ax1 = plt.subplot(211)
     results.portfolio_value.plot(ax=ax1)
-    ax1.set_ylabel('Portfolio value (USD)')
+    ax1.set_ylabel('Portfolio value')
     ax2 = plt.subplot(212, sharex=ax1)
     results.AAPL.plot(ax=ax2)
-    ax2.set_ylabel('AAPL price (USD)')
+    ax2.set_ylabel('price')
 
     # Show the plot.
     plt.gcf().set_size_inches(18, 8)
     plt.show()
 
 
-def _test_args():
-    """Extra arguments to use when zipline's automated tests run this example.
-    """
-    import pandas as pd
-
-    return {
-        'start': pd.Timestamp('2020-01-01', tz='utc'),
-        'end': pd.Timestamp('2020-06-01', tz='utc'),
-    }
-
-
 if __name__ == '__main__':
-    from trading_calendars import get_calendar
-
-    from pathlib import Path
-
-    print('Running' if __name__ == '__main__' else 'Importing', Path(__file__).resolve())
 
     from zipline_extensions_cn.utils.run_algo import run_algorithm
 
     import pandas as pd
 
-    calendar = get_calendar("XSHG")
-    start = pd.Timestamp('2020-01-01', tz='utc')
-    end = pd.Timestamp('2020-06-01', tz='utc')
+    start = pd.Timestamp('2015-1-1', tz='utc')
+    end = pd.Timestamp('2015-1-6', tz='utc')
     run_algorithm(
         start=start,
         end=end,
         initialize=initialize,
-        capital_base= 1000000,
         analyze=analyze,
-        bundle='mydb',
-        trading_calendar=calendar,
     )
