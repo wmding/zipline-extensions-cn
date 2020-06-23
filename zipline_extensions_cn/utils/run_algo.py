@@ -17,7 +17,7 @@ import six
 from toolz import concatv
 from trading_calendars import get_calendar
 
-from zipline.data import bundles
+from zipline_extensions_cn.data import bundles
 from zipline.data.benchmarks import get_benchmark_returns_from_file
 from zipline.data.data_portal import DataPortal
 from zipline.finance import metrics
