@@ -2,6 +2,7 @@ from zipline import TradingAlgorithm
 from trading_calendars.utils.pandas_utils import days_at_time
 from datetime import time
 from zipline.gens.sim_engine import MinuteSimulationClock
+from zipline_extensions_cn.gens.tradesimulation import CNAlgorithmSimulator
 
 
 class CNTradingAlgorithm(TradingAlgorithm):
@@ -52,3 +53,31 @@ class CNTradingAlgorithm(TradingAlgorithm):
             before_trading_start_minutes,
             minute_emission=minutely_emission,
         )
+
+    def _create_generator(self, sim_params):
+        if sim_params is not None:
+            self.sim_params = sim_params
+
+        self.metrics_tracker = metrics_tracker = self._create_metrics_tracker()
+
+        # Set the dt initially to the period start by forcing it to change.
+        self.on_dt_changed(self.sim_params.start_session)
+
+        if not self.initialized:
+            self.initialize(**self.initialize_kwargs)
+            self.initialized = True
+
+        benchmark_source = self._create_benchmark_source()
+
+        self.trading_client = CNAlgorithmSimulator(
+            self,
+            sim_params,
+            self.data_portal,
+            self._create_clock(),
+            benchmark_source,
+            self.restrictions,
+            universe_func=self._calculate_universe
+        )
+
+        metrics_tracker.handle_start_of_simulation(benchmark_source)
+        return self.trading_client.transform()
