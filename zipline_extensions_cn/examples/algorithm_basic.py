@@ -34,7 +34,7 @@ log = Logger(__name__)
 
 
 def initialize(context):
-    context.asset = symbol('000001.SZ')
+    context.asset = symbol('601236.SH')
 
     # Explicitly set the commission/slippage to the "old" value until we can
     # rebuild example data.
@@ -52,14 +52,13 @@ def initialize(context):
 
 def my_func(context, data):
     # Order 100 shares of AAPL.
-    order_target(context.asset, 1000)
-
+    # order_target(context.asset, 1000)
+    order(context.asset, 1000)
     # Retrieve all open orders.
     open_orders = get_open_orders()
 
     # If there are any open orders.
     if open_orders:
-        print(open_orders)
         # open_orders is a dictionary keyed by sid, with values that are lists of orders. Iterate over the dictionary
         for security, orders in open_orders.items():
             # Iterate over the orders and log the total open amount
@@ -95,8 +94,8 @@ if __name__ == '__main__':
 
     import pandas as pd
 
-    start = pd.Timestamp('2015-1-1', tz='utc')
-    end = pd.Timestamp('2015-1-6', tz='utc')
+    start = pd.Timestamp('2019-7-15', tz='utc')
+    end = pd.Timestamp('2019-7-25', tz='utc')
     run_algorithm(
         start=start,
         end=end,

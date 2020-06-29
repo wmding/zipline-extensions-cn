@@ -10,6 +10,8 @@ from pandas import isnull
 # SQRT_252 = math.sqrt(252)
 #
 DEFAULT_EQUITY_VOLUME_SLIPPAGE_BAR_LIMIT = 0.025
+
+
 # DEFAULT_FUTURE_VOLUME_SLIPPAGE_BAR_LIMIT = 0.05
 
 
@@ -48,6 +50,15 @@ def fill_price_worse_than_limit_price(fill_price, order):
             return True
 
     return False
+
+
+def reach_limit_price(impacted_price, pre_price, order):
+    if math.isnan(pre_price):
+        return True
+    if order.direction > 0:
+        return impacted_price >= round(pre_price * 1.1, 2)
+    else:
+        return impacted_price <= round(pre_price * 0.9, 2)
 
 
 class VolumeShareSlippage(SlippageModel):
@@ -122,6 +133,7 @@ class VolumeShareSlippage(SlippageModel):
                            self.volume_limit)
 
         price = data.current(order.asset, "close")
+        pre_price = data.history(order.asset, bar_count=2, fields='close', frequency='1d')[0]
 
         # BEGIN
         #
@@ -137,6 +149,9 @@ class VolumeShareSlippage(SlippageModel):
         impacted_price = price + simulated_impact
 
         if fill_price_worse_than_limit_price(impacted_price, order):
+            return None, None
+
+        if reach_limit_price(impacted_price, pre_price, order):
             return None, None
 
         return (
