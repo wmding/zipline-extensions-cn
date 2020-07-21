@@ -151,7 +151,7 @@ def mydb_bundle(environ,
     zipline.data.bundles.ingest
     """
     sql_metadata = "select code, max(trading_date) as end_date, min(trading_date) as start_date from " \
-                   "DailyQuotes where trading_date >= '1999-01-01' group by code "
+                   "DailyQuotes where trading_date >= '2018-01-01' group by code "
     df_metadata = read_sql_query(
         sql_metadata,
         engine,
@@ -169,8 +169,8 @@ def mydb_bundle(environ,
     log.info("mydb writing asset metadata")
     asset_db_writer.write(equities=asset_metadata, exchanges=exchanges)
 
-    sql_dailyquotes = "select code, trading_date, open, high, low, close, volume " \
-                      "from DailyQuotes where trading_date >= '1999-01-01'"
+    sql_dailyquotes = "select code, trading_date, open, high, low, close, volume, up_limit, down_limit " \
+                      "from DailyQuotes where trading_date >= '2018-01-01'"
     log.info("mydb 正在下载日线数据")
     df_dailyquotes = read_sql_query(
         sql_dailyquotes,

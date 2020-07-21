@@ -15,6 +15,7 @@ from zipline.data.adjustments import SQLiteAdjustmentReader, SQLiteAdjustmentWri
 from ..fundamentals import SQLiteFundamentalsReader, SQLiteFundamentalsWriter
 
 from zipline.data.bcolz_daily_bars import BcolzDailyBarReader, BcolzDailyBarWriter
+from zipline_extensions_cn.data.bcolz_daily_bars import CNBcolzDailyBarWriter
 from zipline.data.minute_bars import (
     BcolzMinuteBarReader,
     BcolzMinuteBarWriter,
@@ -404,7 +405,7 @@ def _make_bundle_core():
                 daily_bars_path = wd.ensure_dir(
                     *daily_equity_relative(name, timestr)
                 )
-                daily_bar_writer = BcolzDailyBarWriter(
+                daily_bar_writer = CNBcolzDailyBarWriter(
                     daily_bars_path,
                     calendar,
                     start_session,

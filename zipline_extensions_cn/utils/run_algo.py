@@ -22,14 +22,15 @@ from zipline.data.benchmarks import get_benchmark_returns_from_file
 from zipline.data.data_portal import DataPortal
 from zipline.finance import metrics
 from zipline.finance.trading import SimulationParameters
-from zipline.pipeline.data import USEquityPricing
-from zipline.pipeline.loaders import USEquityPricingLoader
+from zipline_extensions_cn.pipeline.data import CNEquityPricing, CNFinancialData
+from zipline_extensions_cn.pipeline.loaders import CNEquityPricingLoader
+from zipline_extensions_cn.pipeline.loaders import FundamentalsLoader
 
 import zipline.utils.paths as pth
 from zipline.extensions import load
 from zipline.errors import SymbolNotFound
 from zipline_extensions_cn.algorithm import CNTradingAlgorithm
-from zipline.finance.blotter import Blotter
+from zipline_extensions_cn.finance.blotter import Blotter
 
 log = logbook.Logger(__name__)
 from zipline.utils.run_algo import BenchmarkSpec, load_extensions
@@ -167,14 +168,22 @@ def _run(handle_data,
         adjustment_reader=bundle_data.adjustment_reader,
     )
 
-    pipeline_loader = USEquityPricingLoader.without_fx(
+    pipeline_loader = CNEquityPricingLoader.without_fx(
         bundle_data.equity_daily_bar_reader,
         bundle_data.adjustment_reader,
     )
 
+    fundamentals_loader = FundamentalsLoader(
+        bundle_data.fundamental_reader
+    )
+
     def choose_loader(column):
-        if column in USEquityPricing.columns:
+
+        if column in CNEquityPricing.columns:
             return pipeline_loader
+        else:
+            if column in CNFinancialData.columns:
+                return fundamentals_loader
         raise ValueError(
             "No PipelineLoader registered for column %s." % column
         )
@@ -243,7 +252,7 @@ def run_algorithm(start,
                   extensions=(),
                   strict_extensions=True,
                   environ=os.environ,
-                  blotter='default'):
+                  blotter='cn_blotter'):
     """
     运行交易策略算法.
 

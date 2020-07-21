@@ -1,0 +1,2 @@
+from zipline.pipeline.loaders import EquityPricingLoader
+CNEquityPricingLoader = EquityPricingLoader

@@ -19,7 +19,6 @@ extensions = [
     'sphinx.ext.todo',
 ]
 
-
 extlinks = {
     'issue': ('https://github.com/quantopian/zipline/issues/%s', '#'),
     'commit': ('https://github.com/quantopian/zipline/commit/%s', ''),
@@ -40,8 +39,8 @@ source_suffix = '.rst'
 master_doc = 'index'
 
 # General information about the project.
-project = u'Zipline'
-copyright = u'2016, Quantopian Inc.'
+project = u'Zipline A股扩展'
+copyright = u'2020, Mihou Inc.'
 
 # The full version, including alpha/beta/rc tags, but excluding the commit hash
 release = version.split('+', 1)[0]

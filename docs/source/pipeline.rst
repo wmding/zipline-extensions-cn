@@ -25,15 +25,15 @@ pipeline
     from zipline.pipeline.factors import SimpleMovingAverage
 
     # Import datasets.
-    from zipline.pipeline.data import EquityPricing
-
+    from zipline_extensions_cn.pipeline.data import CNEquityPricing
+    from zipline_extensions_cn.research import *
 
     # Define factors.
-    sma_10 = SimpleMovingAverage(inputs=[EquityPricing.close], window_length=10)
-    sma_30 = SimpleMovingAverage(inputs=[EquityPricing.close], window_length=30)
+    sma_10 = SimpleMovingAverage(inputs=[CNEquityPricing.close], window_length=10)
+    sma_30 = SimpleMovingAverage(inputs=[CNEquityPricing.close], window_length=30)
 
     # Define a filter.
-    prices_over_5 = (sma_10 > 5)
+    prices_over_5 = (sma_10 > sma_30)
 
     # Instantiate pipeline with two columns corresponding to our two factors, and a
     # screen that filters the result down to assets where sma_10 > $5.
@@ -45,3 +45,4 @@ pipeline
         screen=prices_over_5
     )
 
+    run_pipeline(pipe, start_date = '2019-03-06', end_date = '2019-04-01')

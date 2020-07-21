@@ -1,6 +1,8 @@
 from zipline.finance.slippage import SlippageModel
 import math
 from pandas import isnull
+from zipline.finance.transaction import create_transaction
+
 
 # SELL = 1 << 0
 # BUY = 1 << 1
@@ -9,7 +11,7 @@ from pandas import isnull
 #
 # SQRT_252 = math.sqrt(252)
 #
-DEFAULT_EQUITY_VOLUME_SLIPPAGE_BAR_LIMIT = 0.025
+DEFAULT_EQUITY_VOLUME_SLIPPAGE_BAR_LIMIT = 0.25
 
 
 # DEFAULT_FUTURE_VOLUME_SLIPPAGE_BAR_LIMIT = 0.05
@@ -53,6 +55,7 @@ def fill_price_worse_than_limit_price(fill_price, order):
 
 
 def reach_limit_price(impacted_price, pre_price, order):
+    print(order.asset, "达到价格限制")
     if math.isnan(pre_price):
         return True
     if order.direction > 0:
@@ -109,11 +112,12 @@ class VolumeShareSlippage(SlippageModel):
     def process_order(self, data, order):
         volume = data.current(order.asset, "volume")
 
-        max_volume = self.volume_limit * volume
+        max_volume = int(self.volume_limit * volume)
 
         # price impact accounts for the total volume of transactions
         # created against the current minute bar
         remaining_volume = max_volume - self.volume_for_bar
+
         if remaining_volume < 1:
             # we can't fill any more transactions
             raise LiquidityExceeded()
@@ -121,6 +125,7 @@ class VolumeShareSlippage(SlippageModel):
         # the current order amount will be the min of the
         # volume available in the bar or the open amount.
         cur_volume = int(min(remaining_volume, abs(order.open_amount)))
+        print(data.current_dt, order.asset, volume, max_volume, remaining_volume, order.open_amount, self.volume_for_bar, order.id)
 
         if cur_volume < 1:
             return None, None
@@ -158,3 +163,56 @@ class VolumeShareSlippage(SlippageModel):
             impacted_price,
             math.copysign(cur_volume, order.direction)
         )
+
+    def simulate(self, data, asset, orders_for_asset):
+        self._volume_for_bar = 0
+        volume = data.current(asset, "volume")
+
+        if volume == 0:
+            return
+
+        # can use the close price, since we verified there's volume in this
+        # bar.
+        price = data.current(asset, "close")
+
+        # BEGIN
+        #
+        # Remove this block after fixing data to ensure volume always has
+        # corresponding price.
+        if isnull(price):
+            return
+        # END
+        dt = data.current_dt
+
+        for order in orders_for_asset:
+            if order.open_amount == 0:
+                continue
+
+            order.check_triggers(price, dt)
+            if not order.triggered:
+                continue
+
+            txn = None
+
+            try:
+                execution_price, execution_volume = \
+                    self.process_order(data, order)
+                if execution_price is not None:
+                    print("执行价格判断成功")
+
+                    txn = create_transaction(
+                        order,
+                        data.current_dt,
+                        execution_price,
+                        execution_volume
+                    )
+
+            except LiquidityExceeded:
+                break
+
+            if txn:
+                self._volume_for_bar += abs(txn.amount)
+                yield order, txn
+
+    def asdict(self):
+        return self.__dict__

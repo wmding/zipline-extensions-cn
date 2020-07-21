@@ -3,9 +3,9 @@ import pandas as pd
 import time
 from zipline_extensions_cn.data import bundles
 from zipline.data.data_portal import DataPortal
-from zipline.pipeline.data import USEquityPricing
+from zipline_extensions_cn.pipeline.data import CNEquityPricing, CNFinancialData
 from zipline.pipeline.engine import SimplePipelineEngine
-from zipline.pipeline.loaders import USEquityPricingLoader
+from zipline_extensions_cn.pipeline.loaders import CNEquityPricingLoader, FundamentalsLoader
 from zipline.utils.calendars import get_calendar
 from zipline.assets._assets import Equity
 from zipline.pipeline.loaders.blaze import BlazeLoader, from_blaze
@@ -40,15 +40,21 @@ def my_dispatcher(column):
     return loaders[column]
 
 
-pipeline_loader = USEquityPricingLoader.without_fx(
+pipeline_loader = CNEquityPricingLoader.without_fx(
     bundle_data.equity_daily_bar_reader,
     bundle_data.adjustment_reader,
 )
 
+fundamentals_loader = FundamentalsLoader(
+    bundle_data.fundamental_reader
+)
 
 def choose_loader(column):
-    if column in USEquityPricing.columns:
+    if column in CNEquityPricing.columns:
         return pipeline_loader
+    else:
+        if column in CNFinancialData.columns:
+            return fundamentals_loader
     try:
         return my_dispatcher(column)
     except:
