@@ -13,6 +13,7 @@ class FundamentalsDataSet(DataSet):
     total_share_0QE = Column(float64_dtype)
     ipo_date = Column(float64_dtype)
     delist_date = Column(float64_dtype)
+    IndustryId = Column(float64_dtype)
 
 
 CNFinancialData = FundamentalsDataSet.specialize(CN_EQUITIES)

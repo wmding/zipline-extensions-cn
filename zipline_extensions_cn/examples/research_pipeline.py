@@ -5,19 +5,16 @@ end_date = '2020-03-19'
 
 from zipline.pipeline import Pipeline
 from zipline_extensions_cn.pipeline.data import CNFinancialData, CNEquityPricing
-from zipline_extensions_cn.pipeline.filters import AllPresent
 
 close = CNEquityPricing.close.latest
 roeavg3 = CNFinancialData.total_share_0QE.latest
 
-universe = AllPresent()
 
 def make_pipeline():
     return Pipeline(
         columns={
             'close': close,
         },
-        screen=universe,
     )
 
 
