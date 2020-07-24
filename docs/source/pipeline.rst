@@ -201,3 +201,29 @@ pipeline
 
 对因子的计算如果生成的是字符串或者整数标签时, 可以当作分类器使用, 比如行业数据:
 
+.. code-block:: python
+
+    from zipline.pipeline import  CustomClassifier
+    import numpy as np
+
+    class Sector(CustomClassifier):
+        inputs = [CNFinancialData.IndustryId]
+        window_length = 1
+        dtype = np.int64
+        missing_value = 9999
+
+        def compute(self, today, assets, out, IndustryId):
+            out[:] = (IndustryId/1000000).astype(int)
+
+    sector = Sector()
+
+    pipe = Pipeline(
+            columns={
+                'sector': sector,
+            },
+            screen = sector.eq(40),
+        )
+
+这里利用了 ``CustomClassifier`` 进行重新构造分类器.
+分类器有多种方法可以生成过滤器, 上面的 ``eq(40)`` 是其中一种, 可以这么做的原因是
+*Factor* 的 ``quantiles`` 方法实际上返回的就是分类器的子类 ``Quantiles``.

@@ -44,4 +44,5 @@
    :maxdepth: 2
 
    pipeline
+   alphalens
 
