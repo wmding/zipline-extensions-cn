@@ -21,21 +21,22 @@
 
 该文档计划分为以下几个部分:
 
-扩展内容
-=============
-
-.. toctree::
-   :maxdepth: 2
-
-
-
 安装使用
 =========
 
 .. toctree::
    :maxdepth: 2
 
+   install
 
+
+扩展内容
+=============
+
+.. toctree::
+   :maxdepth: 2
+
+   ashare
 
 功能模块
 ==========
@@ -45,4 +46,5 @@
 
    pipeline
    alphalens
-
+   algorithms
+   pyfolio

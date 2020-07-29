@@ -233,7 +233,7 @@ def ipython_only(option):
 )
 @click.option(
     '--blotter',
-    default='default',
+    default='cn_blotter',
     help="The blotter to use.",
     show_default=True,
 )

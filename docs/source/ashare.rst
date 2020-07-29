@@ -1,5 +1,5 @@
 ==================
-A股本地化修改过程
+A股扩展内容
 ==================
 
 .. contents::
@@ -7,29 +7,10 @@ A股本地化修改过程
    :local:
    :backlinks: none
 
-开发安装
-=========
-
-目前最新的 *zipline* 版本是 1.3.0, 通过 `pip/conda` 安装的就是这个版本.
-但是, 在 *github* 上对最新版本的更新内容已经很多, 因此我们计划根据 *github* 最新开源的
-代码进行继续开发.
-开发环境搭建步骤分为以下几个部分:
-
-#. 下载 *github* 代码, 可以用命令行 ``git clone``, 也可以直接下载压缩包, 然后解压缩.
-   后者速度快一些.
-#. 直接执行安装脚本 ``etc/dev_install``. 该脚本首先根据 ``requirements*`` 安装依赖的包, 最后
-   执行 ``pip install .`` 安装 ``zipline``. 对于依赖包安装时有可能会出错, 主要原因是版本的
-   问题, 需要手动进行解决. 目前遇到过的问题包括:
-
-    #. ``bcolz`` 版本 1.12.1 安装总是编译失败, 改回旧版本 0.21.1 后没问题.
-    #. ``sphinx`` 相关的包没有安装
-
-
-
 交易日历
 =========
 
-在最新版本的 *trading_calendar* 包中有定义A股日历的方法, 调用参数为 ``XSHG``.
+目前A股的日历都是从 *trading_calendar* 直接获得, 调用参数为 ``XSHG``.
 
 .. code-block:: python
 
@@ -39,7 +20,9 @@ A股本地化修改过程
 
 该日历获取方法目前发现两个问题:
 
-#. 日线日历是通过手动排除假期的方法创建的, 最近因新冠疫情的原因导致的非正常假期, 没有得到及时更新.
+#. 日线日历是通过手动排除假期的方法创建的, 最近因新冠疫情的原因导致的非正常假期 *2020-02-03*, 没有得到排除.
+   对于该问题, 我们尝试了在本地定义一个正确的日历获取类, 但是由于 *minute_reader* 中调用时, 仍然会自动根据数据中的日历名称从 *trading_calendar* 中
+   获取日历, 这样就导致日历不匹配, 程序无法运行.
 #. 分钟日历序列中没有排除午休时间, 在开源项目 `rainx <https://github.com/rainx/cn_stock_holidays>`_ 中
    中有更详细的A股日历的构建方法, 以后可以参考.
 
@@ -54,7 +37,8 @@ A股本地化修改过程
         "Asia/Shanghai"
     )
 
-原来的默认时区为 ``US/Eastern``, 会对 ``before_trading`` 产生影响.
+原来的默认时区为 ``US/Eastern``, 会对 ``before_trading`` 产生影响. 我们的处理方式是在扩展模块扩展一个 ``TradingAlgorithm``
+的子类 ``CNTradingAlgorithm``, 对时钟获取函数 ``_create_clock`` 进行重写.
 
 基准数据加载
 =================
@@ -73,40 +57,28 @@ A股本地化修改过程
     else:
         benchmark_spec = BenchmarkSpec(None, None, None, None, True)
 
+在扩展模块中, 我们对 ``run_algorithm`` 以及 ``zipline_cn`` 的 ``click`` 功能进行了重写,
+默认不再加载基准数据.
 
 自定义bundle
 =============
 
 
-仿照转换 *quandl* 数据的过程, 我们创建了连接本地搭建的 *MySQL* 数据库的模块 :func:`~zipline.data.bundles.mydb.mydb_bundle`.
+仿照转换 *quandl* 数据的过程, 我们创建了连接本地搭建的 *MySQL* 数据库的模块.
 通过命令行就可以实现对数据的转换
 
 .. code-block:: bash
 
     $ zipline ingest -b mydb
 
-调用该模块时对相关的 `Writer` 做了修改.
-对该模块的注册是在 ``~/.zipline/extension.py`` 中完成:
-
-.. code-block:: python
-
-    #
-    from zipline.data.bundles import register
-    #
-    from zipline.data.bundles.mydb import mydb_bundle
-
-    register(
-        'mydb',
-        mydb_bundle,
-        calendar_name='XSHG'
-    )
-
-在利用该模块产生 *bundle* 过程中, 我们做了下面的修改.
+调用该模块时对相关的 `Writer` 做了修改, 修改部分在扩展模块中得到了重写.
+对该模块的注册的注册是在导入 ``from zipline_extensions_cn.data import bundles``
+时通过修饰函数完成.
 
 开始调试
 ------------
 
-调试过程是利用 *pycharm* 设置断点进行的, 运行代码为:
+调试过程利用 *pycharm* 设置断点进行的, 运行代码为:
 
 .. code-block:: python
 
@@ -133,7 +105,7 @@ A股本地化修改过程
            show_progress=True)
 
 其中, :func:`~zipline.data.bundles.ingest` 函数需要作修改,
-添加财务数据的 ``writer``, 该内容在后面会详细记录.
+添加财务数据的 ``writer``.
 
 公司元数据
 ------------
@@ -150,7 +122,7 @@ A股本地化修改过程
 日线数据的格式在 *zipline* 内部也是固定的, 默认字段为 *OHLCV* 以及公司代码和日期.
 对于A股, 为了方便判断, 我们在日线数据里加入了涨跌停价格. 这样一来, 需要对
 :class:`~zipline.data.bcolz_daily_bars.BcolzDailyBarWriter` 做一点修改,
-在固定列名中加入新添加的字段.
+在固定列名中加入新添加的字段. 这些在我们的扩展模块中得到重写.
 
 .. code-block:: python
 
@@ -232,12 +204,9 @@ A股本地化修改过程
 数据读取
 =========
 
-数据读取通过 :func:`zipline.data.bundles.load` 加载返回 ``BundleData``, 加载过程为:
+数据读取通过 :func:`zipline_extensions_cn.data.bundles.load` 加载返回 ``BundleData``, 加载过程为:
 
->>> from zipline.data import bundles
->>> import os
->>> from zipline.utils.run_algo import load_extensions
->>> load_extensions(True, (), True, os.environ)
+>>> from zipline_extensions_cn.data import bundles
 >>> bundle_data = bundles.load('mydb')
 >>> bundle_data
 BundleData(asset_finder=<zipline.assets.assets.AssetFinder object at 0x7f12d44f5be0>, equity_minute_bar_reader=<zipline.data.minute_bars.BcolzMinuteBarReader object at 0x7f12a0f8dc18>, equity_daily_bar_reader=<zipline.data.bcolz_daily_bars.BcolzDailyBarReader object at 0x7f12a3361048>, adjustment_reader=<zipline.data.adjustments.SQLiteAdjustmentReader object at 0x7f12d4fc1898>, fundamental_reader=<zipline.data.fundamentals.SQLiteFundamentalsReader object at 0x7f12d4fc1470>)
@@ -321,12 +290,9 @@ Equity(0 [000001.SZ])
 
 .. code-block:: python
 
-    from zipline.data import bundles
-    import os
+    from zipline_extensions_cn.data import bundles
     import pandas as pd
-    from zipline.utils.run_algo import load_extensions
     from trading_calendars import get_calendar
-    load_extensions(True, (), True, os.environ)
     bundle_data = bundles.load('mydb')
     trading_calendar = get_calendar('XSHG')
 
@@ -335,8 +301,8 @@ Equity(0 [000001.SZ])
 
 .. code-block:: python
 
-    from zipline.pipeline.loaders import CNEquityPricingLoader
-    from zipline.pipeline.data import CNEquityPricing
+    from zipline_extensions_cn.pipeline.loaders import CNEquityPricingLoader
+    from zipline_extensions_cn.pipeline.data import CNEquityPricing
     from zipline.pipeline.engine import SimplePipelineEngine
     import zipline.pipeline.domain as domain
 
@@ -421,10 +387,10 @@ Equity(0 [000001.SZ])
 
 .. code-block:: python
 
-    from zipline.pipeline.loaders import FundamentalsLoader
-    from zipline.pipeline.data import CNFinancialData
-    from zipline.pipeline.loaders import CNEquityPricingLoader
-    from zipline.pipeline.data import CNEquityPricing
+    from zipline_extensions_cn.pipeline.loaders import FundamentalsLoader
+    from zipline_extensions_cn.pipeline.data import CNFinancialData
+    from zipline_extensions_cn.pipeline.loaders import CNEquityPricingLoader
+    from zipline_extensions_cn.pipeline.data import CNEquityPricing
     from zipline.pipeline.engine import SimplePipelineEngine
     import zipline.pipeline.domain as domain
 

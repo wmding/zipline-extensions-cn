@@ -101,7 +101,22 @@ tear sheets
 
 分类计算
 ---------
+在 *alphalens* 模块中可以利用分类器信息对数据进行分类计算:
+
+.. code-block:: python
+
+    from alphalens.tears import create_returns_tear_sheet
+
+    sector_labels, sector_labels[-1] = dict(Sector.SECTOR_NAMES), "Unknown"
+
+    factor_data = get_clean_factor_and_forward_returns(
+        factor=pipeline_output['factor_to_analyze'],
+        prices=pricing_data,
+        groupby=pipeline_output['sector'],
+        groupby_labels=sector_labels,
+    )
+
+    create_returns_tear_sheet(factor_data=factor_data, by_group=True)
 
 
-
-
+上面介绍的是最为常见的分类器因子--行业, 通过 ``groupby`` 参数, 可以根据行业对数据进行分类.

@@ -8,7 +8,6 @@ from zipline.pipeline.engine import SimplePipelineEngine
 from zipline_extensions_cn.pipeline.loaders import CNEquityPricingLoader, FundamentalsLoader
 from zipline.utils.calendars import get_calendar
 from zipline.assets._assets import Equity
-from zipline.pipeline.loaders.blaze import BlazeLoader, from_blaze
 from zipline.utils.run_algo import load_extensions
 import alphalens as al
 import zipline.pipeline.domain as domain
@@ -33,7 +32,7 @@ bundle_data = bundles.load(bundle)
 loaders = {}
 
 # create and empty BlazeLoader
-blaze_loader = BlazeLoader()
+# blaze_loader = BlazeLoader()
 
 
 def my_dispatcher(column):
@@ -55,11 +54,14 @@ def choose_loader(column):
     else:
         if column in CNFinancialData.columns:
             return fundamentals_loader
-    try:
-        return my_dispatcher(column)
-    except:
-        pass
-    return blaze_loader
+    raise ValueError(
+        "No PipelineLoader registered for column %s." % column
+    )
+    # try:
+    #     return my_dispatcher(column)
+    # except:
+    #     pass
+    # return blaze_loader
 
 
 def default_pipeline_domain(calendar):

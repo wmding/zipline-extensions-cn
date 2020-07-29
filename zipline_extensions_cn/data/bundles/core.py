@@ -9,6 +9,7 @@ import click
 from logbook import Logger
 import pandas as pd
 from trading_calendars import get_calendar
+
 from toolz import curry, complement, take
 
 from zipline.data.adjustments import SQLiteAdjustmentReader, SQLiteAdjustmentWriter
