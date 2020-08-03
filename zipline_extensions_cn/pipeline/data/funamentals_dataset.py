@@ -1,7 +1,10 @@
 from zipline.utils.numpy_utils import float64_dtype
 
-from zipline.pipeline.domain import CN_EQUITIES
+from zipline.pipeline.domain import CN_EQUITIES, EquityCalendarDomain, CountryCode
 from zipline.pipeline.data.dataset import Column, DataSet
+
+
+AShare_EQUITIES = EquityCalendarDomain(CountryCode.CHINA, 'AShare')
 
 
 class FundamentalsDataSet(DataSet):
@@ -16,4 +19,4 @@ class FundamentalsDataSet(DataSet):
     IndustryId = Column(float64_dtype)
 
 
-CNFinancialData = FundamentalsDataSet.specialize(CN_EQUITIES)
+CNFinancialData = FundamentalsDataSet.specialize(AShare_EQUITIES)
