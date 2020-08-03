@@ -1,10 +1,7 @@
 from zipline.utils.numpy_utils import float64_dtype
 
-from zipline.pipeline.domain import CN_EQUITIES, EquityCalendarDomain, CountryCode
+from zipline_extensions_cn.pipeline.domain import AShare_EQUITIES
 from zipline.pipeline.data.dataset import Column, DataSet
-
-
-AShare_EQUITIES = EquityCalendarDomain(CountryCode.CHINA, 'AShare')
 
 
 class FundamentalsDataSet(DataSet):

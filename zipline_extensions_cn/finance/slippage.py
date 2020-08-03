@@ -143,7 +143,7 @@ class VolumeShareSlippage(SlippageModel):
 
         price = data.current(order.asset, "close")
         pre_price = data.history(order.asset, bar_count=2, fields='close', frequency='1d')[0]
-        # print('pre_price', data.history(order.asset, bar_count=2, fields='close', frequency='1d'))
+        print('pre_price', data.history(order.asset, bar_count=2, fields='close', frequency='1d'))
         up_limit = data.current(order.asset, "up_limit")
         down_limit = data.current(order.asset, "down_limit")
 
@@ -164,6 +164,7 @@ class VolumeShareSlippage(SlippageModel):
             return None, None
 
         if reach_limit_price(impacted_price, up_limit, down_limit, pre_price, order):
+            print("滑点模型显示价格限制", up_limit, down_limit, pre_price)
             return None, None
 
         return (
