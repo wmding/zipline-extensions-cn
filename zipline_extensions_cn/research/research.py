@@ -2,7 +2,7 @@ import os
 import pandas as pd
 import time
 from zipline_extensions_cn.data import bundles
-from zipline.data.data_portal import DataPortal
+from zipline_extensions_cn.data.data_portal import CNDataPortal
 from zipline_extensions_cn.pipeline.data import CNEquityPricing, CNFinancialData
 from zipline.pipeline.engine import SimplePipelineEngine
 from zipline_extensions_cn.pipeline.loaders import CNEquityPricingLoader, FundamentalsLoader
@@ -25,7 +25,7 @@ load_extensions(
 )
 
 # Set-Up Pricing Data Access
-trading_calendar = get_calendar('XSHG')
+trading_calendar = get_calendar('AShare')
 bundle = 'mydb'
 bundle_data = bundles.load(bundle)
 
@@ -90,7 +90,7 @@ def run_pipeline(pipeline, start_date, end_date):
     )
 
 
-data = DataPortal(
+data = CNDataPortal(
     bundle_data.asset_finder,
     trading_calendar=trading_calendar,
     first_trading_day=bundle_data.equity_daily_bar_reader.first_trading_day,

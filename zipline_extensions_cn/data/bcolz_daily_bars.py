@@ -32,7 +32,7 @@ logger = logbook.Logger('CNEquityPricing')
 CNOHLC = frozenset(['open', 'high', 'low', 'close', 'up_limit', 'down_limit'])
 
 CN_EQUITY_PRICING_BCOLZ_COLUMNS = (
-    'open', 'high', 'low', 'close', 'volume', 'day', 'id', 'up_limit'
+    'open', 'high', 'low', 'close', 'volume', 'day', 'id', 'up_limit', 'down_limit'
 )
 
 class CNBcolzDailyBarWriter(BcolzDailyBarWriter):

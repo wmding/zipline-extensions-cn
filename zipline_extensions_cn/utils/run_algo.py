@@ -19,7 +19,7 @@ from trading_calendars import get_calendar
 
 from zipline_extensions_cn.data import bundles
 from zipline.data.benchmarks import get_benchmark_returns_from_file
-from zipline.data.data_portal import DataPortal
+from zipline_extensions_cn.data.data_portal import CNDataPortal
 from zipline.finance import metrics
 from zipline.finance.trading import SimulationParameters
 from zipline_extensions_cn.pipeline.data import CNEquityPricing, CNFinancialData
@@ -159,7 +159,7 @@ def _run(handle_data,
     first_trading_day = \
         bundle_data.equity_minute_bar_reader.first_trading_day
 
-    data = DataPortal(
+    data = CNDataPortal(
         bundle_data.asset_finder,
         trading_calendar=trading_calendar,
         first_trading_day=first_trading_day,
@@ -308,6 +308,10 @@ def run_algorithm(start,
     --------
     zipline.data.bundles.bundles : 可用的数据包.
     """
+    from trading_calendars import register_calendar
+    from zipline_extensions_cn.utils import AShareCalendar
+    register_calendar('AShare', AShareCalendar)
+
     load_extensions(default_extension, extensions, strict_extensions, environ)
 
     if benchmark_returns is not None:

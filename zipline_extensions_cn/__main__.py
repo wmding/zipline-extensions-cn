@@ -11,7 +11,7 @@ from zipline_extensions_cn.data import bundles as bundles_module
 from trading_calendars import get_calendar
 from zipline.utils.compat import wraps
 from zipline.utils.cli import Date, Timestamp
-from zipline.utils.run_algo import BenchmarkSpec
+from zipline.utils.run_algo import BenchmarkSpec, load_extensions
 from zipline_extensions_cn.utils.run_algo import _run
 from zipline.extensions import create_args
 
@@ -54,12 +54,12 @@ def main(ctx, extension, strict_extensions, default_extension, x):
     # install a logbook handler before performing any other operations
     logbook.StderrHandler().push_application()
     create_args(x, zipline.extension_args)
-    # load_extensions(
-    #     default_extension,
-    #     extension,
-    #     strict_extensions,
-    #     os.environ,
-    # )
+    load_extensions(
+        default_extension,
+        extension,
+        strict_extensions,
+        os.environ,
+    )
 
 
 def extract_option_object(option):

@@ -352,7 +352,6 @@ class CNSimulationBlotter(Blotter):
                             "order": order,
                             "cost": additional_commission
                         })
-                    print(order.asset, order.amount, order.filled)
                     order.filled += txn.amount
                     order.commission += additional_commission
 

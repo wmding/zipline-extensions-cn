@@ -103,7 +103,7 @@ def parse_pricing_and_vol(data,
 
 @bundles.register(
     "mydb",
-    calendar_name="XSHG"
+    calendar_name="AShare"
 )
 def mydb_bundle(environ,
                 asset_db_writer,

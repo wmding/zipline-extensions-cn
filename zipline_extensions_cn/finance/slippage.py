@@ -3,7 +3,6 @@ import math
 from pandas import isnull
 from zipline.finance.transaction import create_transaction
 
-
 # SELL = 1 << 0
 # BUY = 1 << 1
 # STOP = 1 << 2
@@ -54,14 +53,20 @@ def fill_price_worse_than_limit_price(fill_price, order):
     return False
 
 
-def reach_limit_price(impacted_price, pre_price, order):
-    print(order.asset, "达到价格限制")
+def reach_limit_price(impacted_price, up_limit, down_limit, pre_price, order):
+    # print("滑点模型显示价格限制", up_limit, down_limit, pre_price)
     if math.isnan(pre_price):
         return True
     if order.direction > 0:
-        return impacted_price >= round(pre_price * 1.1, 2)
+        if math.isnan(up_limit):
+            return impacted_price >= round(pre_price * 1.1, 2)
+        else:
+            return impacted_price >= up_limit
     else:
-        return impacted_price <= round(pre_price * 0.9, 2)
+        if math.isnan(down_limit):
+            return impacted_price <= round(pre_price * 0.9, 2)
+        else:
+            return impacted_price <= down_limit
 
 
 class VolumeShareSlippage(SlippageModel):
@@ -125,7 +130,6 @@ class VolumeShareSlippage(SlippageModel):
         # the current order amount will be the min of the
         # volume available in the bar or the open amount.
         cur_volume = int(min(remaining_volume, abs(order.open_amount)))
-        print(data.current_dt, order.asset, volume, max_volume, remaining_volume, order.open_amount, self.volume_for_bar, order.id)
 
         if cur_volume < 1:
             return None, None
@@ -139,6 +143,9 @@ class VolumeShareSlippage(SlippageModel):
 
         price = data.current(order.asset, "close")
         pre_price = data.history(order.asset, bar_count=2, fields='close', frequency='1d')[0]
+        # print('pre_price', data.history(order.asset, bar_count=2, fields='close', frequency='1d'))
+        up_limit = data.current(order.asset, "up_limit")
+        down_limit = data.current(order.asset, "down_limit")
 
         # BEGIN
         #
@@ -156,7 +163,7 @@ class VolumeShareSlippage(SlippageModel):
         if fill_price_worse_than_limit_price(impacted_price, order):
             return None, None
 
-        if reach_limit_price(impacted_price, pre_price, order):
+        if reach_limit_price(impacted_price, up_limit, down_limit, pre_price, order):
             return None, None
 
         return (
@@ -198,8 +205,6 @@ class VolumeShareSlippage(SlippageModel):
                 execution_price, execution_volume = \
                     self.process_order(data, order)
                 if execution_price is not None:
-                    print("执行价格判断成功")
-
                     txn = create_transaction(
                         order,
                         data.current_dt,

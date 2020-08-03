@@ -377,7 +377,7 @@ def _make_bundle_core():
             raise UnknownBundle(name)
 
         calendar = get_calendar(bundle.calendar_name)
-
+        print(bundle.calendar_name, )
         start_session = bundle.start_session
         end_session = bundle.end_session
 

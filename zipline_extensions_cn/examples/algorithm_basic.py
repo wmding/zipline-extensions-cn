@@ -34,7 +34,7 @@ log = Logger(__name__)
 
 
 def initialize(context):
-    context.asset = symbol('601236.SH')
+    context.asset = symbol('000001.SZ')
 
     # Explicitly set the commission/slippage to the "old" value until we can
     # rebuild example data.
@@ -53,8 +53,18 @@ def initialize(context):
 def my_func(context, data):
     # Order 100 shares of AAPL.
     # order_target(context.asset, 1000)
-    order(context.asset, 1000)
+
+    close = data.current(context.asset, "close")
+    uplimit = data.current(context.asset, "up_limit") / 1000
+
+    # print(context.asset, "价格限制", 'close', close, 'uplimit', uplimit)
+
+    if (close >= uplimit):
+        print(context.asset, "价格限制", 'close', close, 'uplimit', uplimit)
+    else:
+        order(context.asset, 1000)
     # Retrieve all open orders.
+
     open_orders = get_open_orders()
 
     # If there are any open orders.
@@ -90,13 +100,13 @@ def analyze(context=None, results=None):
 
 
 if __name__ == '__main__':
-
     from zipline_extensions_cn.utils.run_algo import run_algorithm
 
     import pandas as pd
 
-    start = pd.Timestamp('2019-7-15', tz='utc')
-    end = pd.Timestamp('2019-7-25', tz='utc')
+    start = pd.Timestamp('2018-9-15', tz='utc')
+    end = pd.Timestamp('2019-12-25', tz='utc')
+
     run_algorithm(
         start=start,
         end=end,
