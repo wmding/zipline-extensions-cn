@@ -13,10 +13,11 @@ from zipline.utils.numpy_utils import (
     float64_dtype,
     object_dtype,
     int64_dtype,
+    bool_dtype,
     uint32_dtype,
     uint64_dtype,
+    dtype,
 )
-
 
 SQLITE_FUNDAMENTALS_COLUMN_DTYPES = {
     'sid': any_integer,
@@ -27,14 +28,23 @@ SQLITE_FUNDAMENTALS_COLUMN_DTYPES = {
     'comp_type': float64_dtype,
     'update_flag': object_dtype,
     'total_share': float64_dtype,
-    'cap_rese':float64_dtype,
+    'cap_rese': float64_dtype,
 }
 
 SQLITE_FUNDAMENTAL_FACTORS_COLUMN_DTYPES = {
     'sid': any_integer,
-    'date': any_integer,
+    'date': datetime64ns_dtype,
     'value': float64_dtype,
 }
+
+SQLITE_FACTORS_VALUE_DTYPES = {
+    int64_dtype,
+    datetime64ns_dtype,
+    bool_dtype,
+    float64_dtype,
+    object_dtype,
+}
+
 
 class SQLiteFundamentalsWriter(object):
     """
@@ -68,6 +78,31 @@ class SQLiteFundamentalsWriter(object):
         else:
             raise TypeError("Unknown connection type %s" % type(conn_or_path))
 
+    def write_factor(self, table=None, name=None):
+
+        if table is None:
+            return
+
+        # df = table[fundamentals['name'] == name].copy()
+        # df.drop('name', axis=1, inplace=True)
+        table['date'] = table['date'].values.astype('datetime64[s]').astype(any_integer)
+
+        if dtype(table['value']) in SQLITE_FACTORS_VALUE_DTYPES:
+            table.to_sql(
+                'fundamentals_%s' % name,
+                self.conn,
+                if_exists='append',
+                chunksize=50000,
+            )
+        else:
+            raise ValueError(
+                "Unexpected frame columns:\n"
+                "Expected Columns: %s\n"
+                "Received Columns: %s" % (
+                    set(SQLITE_FACTORS_VALUE_DTYPES),
+                    dtype(table['value']),
+                )
+            )
 
     def write(self, fundamentals=None):
         """
@@ -142,7 +177,6 @@ class SQLiteFundamentalsWriter(object):
             if_exists='append',
             chunksize=50000,
         )
-
 
     def __enter__(self):
         return self

@@ -151,7 +151,7 @@ def mydb_bundle(environ,
     zipline.data.bundles.ingest
     """
     sql_metadata = "select code, max(trading_date) as end_date, min(trading_date) as start_date from " \
-                   "DailyQuotes where trading_date >= '2007-01-01' group by code "
+                   "DailyQuotes group by code "
     df_metadata = read_sql_query(
         sql_metadata,
         engine,
@@ -169,8 +169,7 @@ def mydb_bundle(environ,
     log.info("mydb writing asset metadata")
     asset_db_writer.write(equities=asset_metadata, exchanges=exchanges)
 
-    sql_dailyquotes = "select code, trading_date, open, high, low, close, volume, up_limit, down_limit " \
-                      "from DailyQuotes where trading_date >= '2007-01-01'"
+    sql_dailyquotes = "select code, trading_date, open, high, low, close, volume, up_limit, down_limit from DailyQuotes"
     log.info("mydb 正在下载日线数据")
     df_dailyquotes = read_sql_query(
         sql_dailyquotes,
@@ -249,14 +248,20 @@ def mydb_bundle(environ,
         )
     )
 
-    fundamental_factors = ['total_share_0QE', 'ipo_date', 'delist_date', 'IndustryId']
+    fundamental_factors = ['total_share_0QE',
+                           'ipo_date',
+                           'delist_date',
+                           'IndustryId',
+                           'ipo_date_test',
+                           'industry_id'
+                           ]
 
-    fundamentals_loaded = pd.DataFrame()
+    # fundamentals_loaded = pd.DataFrame()
 
     for factor in fundamental_factors:
         sql_fundamentals = "select ts_code,  f_ann_date, value_factor  from {0}".format(factor)
 
-        log.info("mydb 正在下载财务数据 {}", factor)
+        # log.info("mydb 正在下载财务数据 {}", factor)
         df_fundamentals = read_sql_query(
             sql_fundamentals,
             engine_factors,
@@ -267,7 +272,7 @@ def mydb_bundle(environ,
         df_fundamentals = df_fundamentals[df_fundamentals.ts_code.isin(symbol_map)]
         df_fundamentals['sid'] = [symbol_map[symbol_map == i].index[0] for i in df_fundamentals.ts_code]
         del df_fundamentals['ts_code']
-        df_fundamentals['name'] = factor
+        # df_fundamentals['name'] = factor
         df_fundamentals.rename(
             columns={
                 'f_ann_date': 'date',
@@ -275,10 +280,12 @@ def mydb_bundle(environ,
             },
             inplace=True
         )
-        fundamentals_loaded = fundamentals_loaded.append(df_fundamentals)
+        # fundamentals_loaded = fundamentals_loaded.append(df_fundamentals)
+        log.info("mydb 正在写入财务数据 {}", factor)
+        fundamentals_writer.write_factor(table=df_fundamentals, name=factor)
 
-    log.info("mydb 写入财务数据")
-
-    fundamentals_writer.write(fundamentals=fundamentals_loaded)
+    # log.info("mydb 写入财务数据")
+    #
+    # fundamentals_writer.write(fundamentals=fundamentals_loaded)
 
     log.info("mydb 数据产生过程结束")

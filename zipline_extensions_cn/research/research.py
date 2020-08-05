@@ -117,7 +117,7 @@ def set_bundle(name, calendar='XSHG'):
         asset_finder=bundle_data.asset_finder,
     )
 
-    data = DataPortal(
+    data = CNDataPortal(
         bundle_data.asset_finder,
         trading_calendar=trading_calendar,
         first_trading_day=bundle_data.equity_daily_bar_reader.first_trading_day,

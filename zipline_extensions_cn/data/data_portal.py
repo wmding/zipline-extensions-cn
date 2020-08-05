@@ -209,7 +209,6 @@ class CNDataPortal(DataPortal):
             self._roll_finders,
             prefetch_length=daily_history_prefetch_length,
         )
-        print(self._history_loader)
 
         self._minute_history_loader = MinuteHistoryLoader(
             self.trading_calendar,
