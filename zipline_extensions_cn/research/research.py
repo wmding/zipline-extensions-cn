@@ -12,9 +12,7 @@ from zipline.utils.run_algo import load_extensions
 import alphalens as al
 import zipline.pipeline.domain as domain
 
-
 _DEFAULT_DOMAINS = {d.calendar_name: d for d in domain.BUILT_IN_DOMAINS}
-
 
 # Load extensions.py; this allows you access to custom bundles
 load_extensions(
@@ -30,6 +28,7 @@ bundle = 'mydb'
 bundle_data = bundles.load(bundle)
 
 loaders = {}
+
 
 # create and empty BlazeLoader
 # blaze_loader = BlazeLoader()
@@ -47,6 +46,7 @@ pipeline_loader = CNEquityPricingLoader.without_fx(
 fundamentals_loader = FundamentalsLoader(
     bundle_data.fundamental_reader
 )
+
 
 def choose_loader(column):
     if column in CNEquityPricing.columns:
@@ -243,5 +243,3 @@ def make_factor_plot(df, start_date, end_date):
     df_ls_factor_returns = pd.concat(ls_factor_returns, axis=1)
     (1 + df_ls_factor_returns).cumprod().plot(title='Cumulative Factor Returns');
     return df_ls_factor_returns
-
-
