@@ -475,6 +475,7 @@ Equity(0 [000001.SZ])
 
 
 .. code-block:: python
+
     from zipline.pipeline import CustomFactor
 
     market_value = CNFinancialData.total_share_0QE.latest * CNEquityPricing.close.latest
@@ -566,6 +567,7 @@ Quantopian的 `Research Platform <https://www.quantopian.com/tutorials/getting-s
     )
 
 输出为::
+
                                                         daily_returns
     2013-02-18 00:00:00+00:00 Equity(0 [000001.SZ])         -0.004796
                               Equity(1 [000002.SZ])          0.012626

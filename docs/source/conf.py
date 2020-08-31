@@ -17,6 +17,8 @@ extensions = [
     'sphinx.ext.autosummary',
     'sphinx.ext.viewcode',
     'sphinx.ext.todo',
+    'recommonmark',
+    'sphinx.ext.mathjax',
 ]
 
 extlinks = {
@@ -33,7 +35,11 @@ numpydoc_show_class_members = False
 templates_path = ['.templates']
 
 # The suffix of source filenames.
-source_suffix = '.rst'
+source_suffix = {
+    '.rst': 'restructuredtext',
+    '.txt': 'markdown',
+    '.md': 'markdown',
+}
 
 # The master toctree document.
 master_doc = 'index'
@@ -95,3 +101,13 @@ intersphinx_mapping = {
 doctest_global_setup = "import zipline"
 
 todo_include_todos = True
+
+mathjax_config = {
+    'extensions': ['tex2jax.js'],
+    'jax': ['input/TeX', 'output/HTML-CSS'],
+    'tex2jax': {
+        'inlineMath': [['$', '$'], ["\\(", "\\)"]],
+        'displayMath': [['$$', '$$'], ["\\[", "\\]"]],
+        'processEscapes': True
+    },
+}

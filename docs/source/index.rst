@@ -47,4 +47,11 @@
    pipeline
    alphalens
    algorithms
-   pyfolio
+
+知识储备
+============
+
+.. toctree::
+   :maxdepth: 2
+
+   statistics/index

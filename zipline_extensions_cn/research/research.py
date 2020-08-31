@@ -140,8 +140,8 @@ def get_symbols(tickers, as_of_date=None):
 
 
 def get_pricing(tickers, start_date, end_date, field='close'):
-    end_dt = pd.Timestamp(end_date, tz='UTC', offset='C')
-    start_dt = pd.Timestamp(start_date, tz='UTC', offset='C')
+    end_dt = pd.Timestamp(end_date, tz='utc')
+    start_dt = pd.Timestamp(start_date, tz='utc')
 
     symbols = get_symbols(tickers, as_of_date=end_dt)
 
