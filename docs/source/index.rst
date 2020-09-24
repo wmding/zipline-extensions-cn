@@ -55,3 +55,6 @@
    :maxdepth: 2
 
    statistics/index
+   machine_learning/index
+   practice/index
+
