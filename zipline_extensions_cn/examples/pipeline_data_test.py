@@ -1,0 +1,3 @@
+from zipline_extensions_cn.pipeline.data import SomeDataSet
+
+SomeDataSet
