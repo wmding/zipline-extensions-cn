@@ -110,4 +110,4 @@ mathjax_config = {
         'displayMath': [['$$', '$$'], ["\\[", "\\]"]],
         'processEscapes': True
     },
-}
+}  
