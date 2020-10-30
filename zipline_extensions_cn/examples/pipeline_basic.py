@@ -23,7 +23,7 @@ def make_pipeline():
     filter1 = CNEquityPricing.volume.latest > 4000
     # filter2 = CNEquityPricing.high.latest < CNEquityPricing.up_limit.latest/1000
     # filter3 = CNEquityPricing.high.latest > CNEquityPricing.down_limit.latest/1000
-
+    close = CNEquityPricing.close.latest
     market_cap = CNEquityPricing.close.latest * CNFinancialData.total_share_0QE.latest
     universe = filter1 & market_cap.notnull()
 
@@ -34,6 +34,7 @@ def make_pipeline():
     # market_cap_1_top = market_cap.top(5, mask=maket_cap_1)
     pipe = Pipeline()
     pipe.add(market_cap, 'market_cap')
+    pipe.add(close, 'close')
     pipe.set_screen(market_cap_top5)
 
     return pipe

@@ -311,12 +311,12 @@ def run_algorithm(start,
     from trading_calendars import register_calendar
     from zipline_extensions_cn.utils import AShareCalendar
     from trading_calendars.errors import CalendarNameCollision
-    
+
     try:
         register_calendar('AShare', AShareCalendar())
     except CalendarNameCollision:
         pass
-        
+
 
     #load_extensions(default_extension, extensions, strict_extensions, environ)
 

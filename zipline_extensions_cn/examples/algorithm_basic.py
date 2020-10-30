@@ -15,8 +15,7 @@
 # limitations under the License.
 
 from zipline.api import order, record, symbol
-from zipline.finance import commission
-from zipline_extensions_cn.finance.slippage import VolumeShareSlippage
+from zipline.finance import commission, slippage
 
 from zipline.api import (
     attach_pipeline,
@@ -41,7 +40,7 @@ def initialize(context):
     # github.com/quantopian/zipline/blob/master/tests/resources/
     # rebuild_example_data#L105
     context.set_commission(commission.PerShare(cost=.0075, min_trade_cost=1.0))
-    context.set_slippage(VolumeShareSlippage())
+    context.set_slippage(slippage.VolumeShareSlippage())
 
     schedule_function(
         my_func,
