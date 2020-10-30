@@ -46,14 +46,19 @@ def get_delta_atoms(atoms, report_date, engine=engine_ashare):
     for atom, atom_tbl in atoms.items():
         sql = "SELECT ts_code, end_date, report_type,  \
               %s FROM AShareData.%s WHERE comp_type = 1 and \
+<<<<<<< HEAD
               (end_date = '%s' or end_date = '%s')" % (atom, atom_tbl,
                                                        report_date, pre_date)
+=======
+              (end_date = '%s' or end_date = '%s')" % (atom, atom_tbl, report_date, pre_date)
+>>>>>>> origin/master
         print(sql)
 
         df_atom = pd.read_sql_query(
             sql,
             engine_ashare,
         )
+<<<<<<< HEAD
         df_atom = df_atom.loc[(df_atom.report_type == 1) |
                               (df_atom.report_type == 5)]
         df_atom.drop_duplicates(['ts_code', 'end_date', 'report_type'],
@@ -61,11 +66,17 @@ def get_delta_atoms(atoms, report_date, engine=engine_ashare):
         df_atom.drop_duplicates(['ts_code', 'end_date'],
                                 keep='last',
                                 inplace=True)
+=======
+        df_atom = df_atom.loc[(df_atom.report_type == 1) | (df_atom.report_type == 5)]
+        df_atom.drop_duplicates(['ts_code', 'end_date', 'report_type'], inplace=True)
+        df_atom.drop_duplicates(['ts_code', 'end_date'], keep='last', inplace=True)
+>>>>>>> origin/master
         df_atom = df_atom.drop(['report_type'], axis=1)
 
         if df_merge is None:
             df_merge = df_atom
         else:
+<<<<<<< HEAD
             df_merge = pd.merge(df_merge,
                                 df_atom,
                                 how="inner",
@@ -74,6 +85,12 @@ def get_delta_atoms(atoms, report_date, engine=engine_ashare):
     df_merge = df_merge.set_index(['ts_code', 'end_date'])
     df_delta = df_merge.xs(report_date, level=1) - df_merge.xs(pre_date,
                                                                level=1)
+=======
+            df_merge = pd.merge(df_merge, df_atom, how="inner", on=["ts_code", "end_date"])
+
+    df_merge = df_merge.set_index(['ts_code', 'end_date'])
+    df_delta = df_merge.xs(report_date, level=1) - df_merge.xs(pre_date, level=1)
+>>>>>>> origin/master
 
     return df_delta
 
@@ -96,8 +113,13 @@ def tata(report_date):
     df = df.join(get_atoms(atoms, report_date))
 
     return (df.total_cur_assets - df.money_cap -
+<<<<<<< HEAD
             (df.total_cur_liab - df.non_cur_liab_due_1y - df.taxes_payable) -
             df.depr_fa_coga_dpba) / df.total_assets
+=======
+            (df.total_cur_liab - df.non_cur_liab_due_1y - df.taxes_payable)
+            - df.depr_fa_coga_dpba) / df.total_assets
+>>>>>>> origin/master
 
 
 def ch_cs(report_date):
@@ -137,6 +159,7 @@ def SD_VOL(report_date):
     pre_date = pd.to_datetime(report_date) - pd.offsets.DateOffset(years=1)
 
     sql = "SELECT trading_date, code, close, volume, market_value,circulation_market_value  \
+<<<<<<< HEAD
           FROM AShareData.DailyQuotes WHERE trading_date > '%s' and trading_date <= '%s'" % (
         pre_date, report_date)
 
@@ -153,6 +176,25 @@ def SD_VOL(report_date):
     volume_m = df.volume.groupby(
         [pd.Grouper(level='code'),
          pd.Grouper(level='trading_date', freq='M')]).sum()
+=======
+          FROM AShareData.DailyQuotes WHERE trading_date > '%s' and trading_date <= '%s'" % (pre_date, report_date)
+
+    df = pd.read_sql_query(
+        sql,
+        engine_ashare,
+        index_col=['code', 'trading_date']
+    )
+
+    close_m = df.close.groupby([pd.Grouper(level='code'),
+                                pd.Grouper(level='trading_date', freq='M')]
+                               ).last()
+    market_m = df.circulation_market_value.groupby([pd.Grouper(level='code'),
+                                                    pd.Grouper(level='trading_date', freq='M')]
+                                                   ).last()
+    volume_m = df.volume.groupby([pd.Grouper(level='code'),
+                                  pd.Grouper(level='trading_date', freq='M')]
+                                 ).sum()
+>>>>>>> origin/master
 
     turn_over_m = volume_m / (market_m / close_m)
 
@@ -168,9 +210,13 @@ def stkcyc(report_date):
     last_date = pd.to_datetime(report_date) + pd.offsets.DateOffset(years=1)
     last_date = last_date.strftime('%Y-%m-%d')
     pro = ts.pro_api()
+<<<<<<< HEAD
     df = pro.index_monthly(ts_code='000001.SH',
                            start_date=pre_date,
                            end_date=last_date,
+=======
+    df = pro.index_monthly(ts_code='000001.SH', start_date=pre_date, end_date=last_date,
+>>>>>>> origin/master
                            fields='ts_code,trade_date,close')
 
     annual_income = df.close[0] / df.close[12]
@@ -184,7 +230,16 @@ def issue(report_date):
     }
 
     df = get_delta_atoms(atoms, report_date)
+<<<<<<< HEAD
     df.rename(columns={'total_assets': 'delta_total_assets'}, inplace=True)
+=======
+    df.rename(
+        columns={
+            'total_assets': 'delta_total_assets'
+        },
+        inplace=True
+    )
+>>>>>>> origin/master
 
     df = df.join(get_atoms(atoms, report_date))
 
@@ -192,7 +247,11 @@ def issue(report_date):
 
 
 h5index2019 = pd.read_csv('practice/h5index2019.csv')
+<<<<<<< HEAD
 h5index2019.value = (h5index2019.value / 100)**2
+=======
+h5index2019.value = (h5index2019.value / 100) ** 2
+>>>>>>> origin/master
 h5index2019.columns = ['code', 'h5index2019']
 df = h5index2019.set_index(['code'])
 
@@ -235,6 +294,10 @@ df = df.dropna()
 
 cscore = -0.983 - 2.261*df.tata2019 - 2.495*df.ch_cs2019 + 5.075*df.otherc2019 + \
          0.797*df.loss2019 - 0.059*df.sd_vol2019 - 3.198*df.h5index2019 - \
+<<<<<<< HEAD
          4.298*df.institu2019 + 0.888*df.issue2019 + 1.184*df.stkcyc2019
 
 print(cscore)
+=======
+         4.298*df.institu2019 + 0.888*df.issue2019 + 1.184*df.stkcyc2019
+>>>>>>> origin/master

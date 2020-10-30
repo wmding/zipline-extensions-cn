@@ -310,9 +310,15 @@ def run_algorithm(start,
     """
     from trading_calendars import register_calendar
     from zipline_extensions_cn.utils import AShareCalendar
-    register_calendar('AShare', AShareCalendar)
+    from trading_calendars.errors import CalendarNameCollision
+    
+    try:
+        register_calendar('AShare', AShareCalendar())
+    except CalendarNameCollision:
+        pass
+        
 
-    load_extensions(default_extension, extensions, strict_extensions, environ)
+    #load_extensions(default_extension, extensions, strict_extensions, environ)
 
     if benchmark_returns is not None:
         benchmark_spec = BenchmarkSpec.from_returns(benchmark_returns)
