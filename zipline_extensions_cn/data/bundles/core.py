@@ -15,8 +15,7 @@ from toolz import curry, complement, take
 from zipline.data.adjustments import SQLiteAdjustmentReader, SQLiteAdjustmentWriter
 from ..fundamentals import SQLiteFundamentalsReader, SQLiteFundamentalsWriter
 
-from zipline.data.bcolz_daily_bars import BcolzDailyBarReader, BcolzDailyBarWriter
-from zipline_extensions_cn.data.bcolz_daily_bars import CNBcolzDailyBarWriter
+from zipline_extensions_cn.data.bcolz_daily_bars import CNBcolzDailyBarWriter, CNBcolzDailyBarReader
 from zipline.data.minute_bars import (
     BcolzMinuteBarReader,
     BcolzMinuteBarWriter,
@@ -430,7 +429,7 @@ def _make_bundle_core():
                 adjustment_db_writer = stack.enter_context(
                     SQLiteAdjustmentWriter(
                         wd.getpath(*adjustment_db_relative(name, timestr)),
-                        BcolzDailyBarReader(daily_bars_path),
+                        CNBcolzDailyBarReader(daily_bars_path),
                         overwrite=True,
                     )
                 )
@@ -541,7 +540,7 @@ def _make_bundle_core():
             equity_minute_bar_reader=BcolzMinuteBarReader(
                 minute_equity_path(name, timestr, environ=environ),
             ),
-            equity_daily_bar_reader=BcolzDailyBarReader(
+            equity_daily_bar_reader=CNBcolzDailyBarReader(
                 daily_equity_path(name, timestr, environ=environ),
             ),
             adjustment_reader=SQLiteAdjustmentReader(

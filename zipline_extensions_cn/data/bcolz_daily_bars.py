@@ -1,6 +1,4 @@
-
-
-from zipline.data.bcolz_daily_bars import BcolzDailyBarWriter, winsorise_uint32, check_uint32_safe
+from zipline.data.bcolz_daily_bars import BcolzDailyBarWriter, BcolzDailyBarReader, winsorise_uint32, check_uint32_safe
 from functools import partial
 import warnings
 
@@ -28,12 +26,12 @@ from zipline.utils.numpy_utils import iNaT, float64_dtype, uint32_dtype
 
 logger = logbook.Logger('CNEquityPricing')
 
-
 CNOHLC = frozenset(['open', 'high', 'low', 'close', 'up_limit', 'down_limit'])
 
 CN_EQUITY_PRICING_BCOLZ_COLUMNS = (
     'open', 'high', 'low', 'close', 'volume', 'day', 'id', 'up_limit', 'down_limit'
 )
+
 
 class CNBcolzDailyBarWriter(BcolzDailyBarWriter):
 
@@ -172,3 +170,12 @@ class CNBcolzDailyBarWriter(BcolzDailyBarWriter):
         processed['day'] = dates.astype('uint32')
         processed['volume'] = raw_data.volume.astype('uint32')
         return ctable.fromdataframe(processed)
+
+
+class CNBcolzDailyBarReader(BcolzDailyBarReader):
+
+    def __init__(self, table, read_all_threshold=3000):
+        super(CNBcolzDailyBarReader, self).__init__(
+            table,
+            read_all_threshold=3000,
+        )

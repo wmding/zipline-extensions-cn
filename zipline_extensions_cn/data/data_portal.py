@@ -1,4 +1,5 @@
 from zipline.data.data_portal import DataPortal
+import pandas as pd
 
 from zipline_extensions_cn.data.history_loader import (
     CNDailyHistoryLoader
@@ -37,11 +38,15 @@ from zipline.data.history_loader import (
     MinuteHistoryLoader,
 )
 
-BASE_FIELDS = frozenset([
+from zipline.data.bar_reader import NoDataOnDate
+
+CNBASE_FIELDS = frozenset([
     "open",
     "high",
     "low",
     "close",
+    "up_limit",
+    "down_limit",
     "volume",
     "price",
     "contract",
@@ -50,11 +55,11 @@ BASE_FIELDS = frozenset([
 ])
 
 CNOHLCV_FIELDS = frozenset([
-    "open", "high", "low", "close", "volume", "up_limit",
+    "open", "high", "low", "close", "volume", "up_limit", "down_limit"
 ])
 
 CNOHLCVP_FIELDS = frozenset([
-    "open", "high", "low", "close", "volume", "price", "up_limit"
+    "open", "high", "low", "close", "volume", "price", "up_limit", "down_limit"
 ])
 
 HISTORY_FREQUENCIES = set(["1m", "1d"])
@@ -235,6 +240,63 @@ class CNDataPortal(DataPortal):
             if self._first_trading_day is not None else None
         )
 
+    @staticmethod
+    def _is_extra_source(asset, field, map):
+        """
+        Internal method that determines if this asset/field combination
+        represents a fetcher value or a regular OHLCVP lookup.
+        """
+        # If we have an extra source with a column called "price", only look
+        # at it if it's on something like palladium and not AAPL (since our
+        # own price data always wins when dealing with assets).
+
+        return not (field in CNBASE_FIELDS and
+                    (isinstance(asset, (Asset, ContinuousFuture))))
+
+    def _get_single_asset_value(self,
+                                session_label,
+                                asset,
+                                field,
+                                dt,
+                                data_frequency):
+        if self._is_extra_source(
+                asset, field, self._augmented_sources_map):
+            return self._get_fetcher_value(asset, field, dt)
+
+        if field not in CNBASE_FIELDS:
+            raise KeyError("Invalid column: " + str(field))
+
+        if dt < asset.start_date or \
+                (data_frequency == "daily" and
+                 session_label > asset.end_date) or \
+                (data_frequency == "minute" and
+                 session_label > asset.end_date):
+            if field == "volume":
+                return 0
+            elif field == "contract":
+                return None
+            elif field != "last_traded":
+                return np.NaN
+
+        if data_frequency == "daily":
+            if field == "contract":
+                return self._get_current_contract(asset, session_label)
+            else:
+                return self._get_daily_spot_value(
+                    asset, field, session_label,
+                )
+        else:
+            if field == "last_traded":
+                return self.get_last_traded_dt(asset, dt, 'minute')
+            elif field == "price":
+                return self._get_minute_spot_value(
+                    asset, "close", dt, ffill=True,
+                )
+            elif field == "contract":
+                return self._get_current_contract(asset, dt)
+            else:
+                return self._get_minute_spot_value(asset, field, dt)
+
     def get_history_window(self,
                            assets,
                            end_dt,
@@ -355,3 +417,44 @@ class CNDataPortal(DataPortal):
                     # all post-end-date values to NaN in that asset's series
                     df.loc[normed_index > asset.end_date, asset] = nan
         return df
+
+    def _get_daily_spot_value(self, asset, column, dt):
+        reader = self._get_pricing_reader('daily')
+        if column == "last_traded":
+            last_traded_dt = reader.get_last_traded_dt(asset, dt)
+
+            if isnull(last_traded_dt):
+                return pd.NaT
+            else:
+                return last_traded_dt
+        elif column in CNOHLCV_FIELDS:
+            # don't forward fill
+            try:
+                return reader.get_value(asset, dt, column)
+            except NoDataOnDate:
+                return np.nan
+        elif column == "price":
+            found_dt = dt
+            while True:
+                try:
+                    value = reader.get_value(
+                        asset, found_dt, "close"
+                    )
+                    if not isnull(value):
+                        if dt == found_dt:
+                            return value
+                        else:
+                            # adjust if needed
+                            return self.get_adjusted_value(
+                                asset, column, found_dt, dt, "minute",
+                                spot_value=value
+                            )
+                    else:
+                        found_dt -= self.trading_calendar.day
+                except NoDataOnDate:
+                    return np.nan
+
+    def contains(self, asset, field):
+        return field in CNBASE_FIELDS or \
+               (field in self._augmented_sources_map and
+                asset in self._augmented_sources_map[field])
